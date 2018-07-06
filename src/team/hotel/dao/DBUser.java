@@ -9,43 +9,41 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import team.hotel.domain.Guest;
+import team.hotel.domain.User;
 
 /**
  * @author Suqiao Lin
- * @version 创建时间：2018年7月6日 数据库-客人
+ * @version 创建时间：2018年7月6日 数据库-user
  */
-public class DBGuest extends DBUtil {
+public class DBUser extends DBUtil {
 
-	List<Guest> guestList = new ArrayList<Guest>();
+	List<User> userList = new ArrayList<User>();
 	DBPrint printer = new DBPrint();
 
-	// 读取所有客人信息
-	public List<Guest> GuestRead() {
-		guestList.clear();
+	// 读取所有用户信息
+	public List<User> UserRead() {
+		userList.clear();
 
 		Connection conn = null;
 		Statement stmt = null;
 		ResultSet rs = null;
-		String sql = "CALL proc_selectAll('guest',@state)";
+		String sql = "CALL proc_selectAll('user',@state)";
 		try {
 			conn = getConnection();
 			stmt = conn.createStatement();
-			printer.PrintReadSQL("Guest", sql);// printer输出
+			printer.PrintReadSQL("User", sql);// printer输出
 			rs = stmt.executeQuery(sql);
 			while (rs.next()) {
-				Short id = rs.getShort("guest_id");
-				String guestName = rs.getString("guest_num");
-				String guestPhone = rs.getString("guest_phone");
-				String guestPassword = rs.getString("guest_password");
-				String guestDocNum = rs.getString("guest_document_num");
-				String guestGender = rs.getString("guest_gender");
-				Date guestLastVisit = rs.getDate("guest_last_visit");
-				String guestLastIP = rs.getString("guest_last_ip");
+				int id = rs.getInt(1);
+				String userName = rs.getString(2);
+				String userPassword = rs.getString(3);
+				int userCredit = rs.getInt(4);
+				String userAu = rs.getString(5);
+				Date userLastVisit = rs.getDate(6);
+				String userLastIP = rs.getString(7);
 
-				Guest guest = new Guest(id, guestName, guestPhone, guestPassword, guestDocNum, guestGender,
-						guestLastVisit, guestLastIP);
-				guestList.add(guest);
+				User user = new User(id, userName, userPassword, userCredit, userAu, userLastVisit, userLastIP);
+				userList.add(user);
 			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -74,61 +72,50 @@ public class DBGuest extends DBUtil {
 				}
 			}
 		}
-		return guestList;
+		return userList;
 	}
 
-	// 查询客人——自定义语句
-	public List<Guest> GuestSelect(Short guestId, String Name, String Phone, String docNum, String gender) {
-		guestList.clear();
+	// 查询用户——自定义语句
+	public List<User> UserSelect(String Name,String auth) {
+		userList.clear();
 		Connection conn = null;
 		ResultSet rs = null;
 		PreparedStatement ptmt = null;
 		try {
-
 			conn = getConnection();
-
-			System.out.println("准备 筛选数据库Guest表 数据");
-			StringBuilder sql = new StringBuilder(" SELECT * FROM guest   where 1=1 ");
+			System.out.println("准备 筛选数据库User表 数据");
+			StringBuilder sql = new StringBuilder(" SELECT * FROM user   where 1=1 ");
 			List<String> paramList = new ArrayList<String>();
+
 			if (Name != null && !"".equals(Name.trim())) {
-				sql.append(" and guest_name like '%' ? '%' ");
+				sql.append(" and user_name like '%' ? '%' ");
 				paramList.add(Name);
 			}
-			if (Phone != null && !"".equals(Phone.trim())) {
-				sql.append(" and guest_phone=? ");
-				paramList.add(Phone);
+			if (auth != null && !"".equals(auth.trim())) {
+				sql.append(" and user_authority=? ");
+				paramList.add(auth);
 			}
-			if (docNum != null && !"".equals(docNum.trim())) {
-				sql.append(" and guest_document_num=? ");
-				paramList.add(docNum);
-			}
-			if (gender != null && !"".equals(gender.trim())) {
-				sql.append(" and guest_gender=? ");
-				paramList.add(gender);
-			}
-
+			
 			ptmt = conn.prepareStatement(sql.toString());
 			for (int i = 0; i < paramList.size(); i++) {
 				ptmt.setString(i + 1, paramList.get(i));
 				System.out.println(paramList.get(i));
 			}
 
-			printer.PrintSQL("Guest", ptmt.toString());
+			printer.PrintSQL("User", ptmt.toString());
 
 			rs = ptmt.executeQuery();
 			while (rs.next()) {
-				Short id = rs.getShort("guest_id");
-				String guestName = rs.getString("guest_Name");
-				String guestPhone = rs.getString("guest_phone");
-				String guestPassword = rs.getString("guest_password");
-				String guestDocNum = rs.getString("guest_document_num");
-				String guestGender = rs.getString("guest_gender");
-				Date guestLastVisit = rs.getDate("guest_last_visit");
-				String guestLastIP = rs.getString("guest_last_ip");
+				int id = rs.getInt(1);
+				String userName = rs.getString(2);
+				String userPassword = rs.getString(3);
+				int userCredit = rs.getInt(4);
+				String userAu = rs.getString(5);
+				Date userLastVisit = rs.getDate(6);
+				String userLastIP = rs.getString(7);
 
-				Guest guest = new Guest(id, guestName, guestPhone, guestPassword, guestDocNum, guestGender,
-						guestLastVisit, guestLastIP);
-				guestList.add(guest);
+				User user = new User(id, userName, userPassword, userCredit, userAu, userLastVisit, userLastIP);
+				userList.add(user);
 			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
@@ -157,15 +144,15 @@ public class DBGuest extends DBUtil {
 				}
 			}
 		}
-		return guestList;
+		return userList;
 	}
 
-	// 更新客人信息
-	public boolean GuestUpdate(Short guestId, String guestName, String guestPhone, String guestPassword,
-			String guestDocumentNum, String guestGender, Date gusetLastVisit, String gusetLastIp) {
-		String sql = "CALL proc_guestUpdate(," + guestId + ",'" + guestName + "','" + guestPhone + "','" + guestPassword
-				+ "','" + guestDocumentNum + "','" + guestGender + "','" + gusetLastVisit + "','" + gusetLastIp + "',@state)";
-		printer.PrintUpdateSQL("Guest", sql);
+	// 更新用户信息
+	public boolean UserUpdate(Short userId, String userName, String userPassword,
+			int credit, String auth, Date LastVisit, String LastIp) {
+		String sql = "CALL proc_userUpdate(," + userId + ",'" + userName + "','" + 
+			userPassword + "'," + credit + ",'"+ auth+"','" +LastVisit + "','" + LastIp+ "',@state)";
+		printer.PrintUpdateSQL("User", sql);
 		boolean returnValue = false;
 		Connection conn = null;
 		Statement stmt = null;
@@ -179,7 +166,7 @@ public class DBGuest extends DBUtil {
 			rs = stmt.executeQuery("SELECT @state");
 			while (rs.next()) {
 				String state = rs.getString(1);
-				if (state.equals("updateGuestSuccess")) {
+				if (state.equals("updateUserSuccess")) {
 					returnValue = true;
 					break;
 				}
@@ -216,10 +203,10 @@ public class DBGuest extends DBUtil {
 		return returnValue;
 	}
 
-	// 删除客人——根据客人编号
-	public boolean GuestDelete(String guestName) {
-		String sql = "CALL proc_guestDel( '" + guestName + "',@state)";
-		printer.PrintDelSQL("Guest", sql);
+	// 删除用户——根据用户编号
+	public boolean UserDelete(String userId) {
+		String sql = "CALL proc_userDel( '" + userId + "',@state)";
+		printer.PrintDelSQL("User", sql);
 		boolean returnValue = false;
 		Connection conn = null;
 		Statement stmt = null;
@@ -232,7 +219,7 @@ public class DBGuest extends DBUtil {
 			rs = stmt.executeQuery("SELECT @state");
 			while (rs.next()) {
 				String state = rs.getString(1);
-				if (state.equals("delGuestSuccess")) {
+				if (state.equals("delUserSuccess")) {
 					returnValue = true;
 					break;
 				}
